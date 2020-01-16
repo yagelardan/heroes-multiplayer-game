@@ -6,7 +6,7 @@
 </div>
 
 <div id="gameDiv" style="display:none;">
-	<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+	<canvas id="ctx" width="1500" height="480" style="border:1px solid #000000;"></canvas>
 
 	<div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
 		<div>Hello!</div>
@@ -73,24 +73,37 @@
 	}
 	
 	//game
-	var currentFrame=1;
+	var sheetWidth = 4536;
+	var sheetHeight = 556;
+	var sheetFrameWidth = 567;
+	var sheetFrameHeight = 556;
+	var sheetMaxFrames = sheetWidth/sheetFrameWidth;
+	
+	var srcX = 0;
+	var srcY = 0;
+	
+	var currentFrame = 0;
+	var frame = 0;
 	function updateFrame(){
-		currentFrame = ++currentFrame;
-		if(currentFrame>8){
-			currentFrame=1;
+		frame++;
+		if(frame>2){	
+			currentFrame = ++currentFrame % sheetMaxFrames;
+			srcX = currentFrame * sheetFrameWidth;
+			frame = 0;
 		}
 	}
-	
+	/*
 	function drawPlayer(Img){
 		//updateFrame();
 		ctx.drawImage(Img.player,
 				0,0,Img.player.width,Img.player.height,
 				x-width/2,y,width,height);
 	}
+	*/
 	
 	var Img = {};
 	Img.player = new Image();
-	//Img.player.src = '/client/img/guul/states/idle/'+String(currentFrame)+'.png';
+	Img.player.src = '/client/img/guul/states/idle/spritesheet.png';
 	Img.bullet = new Image();
 	Img.bullet.src = '/client/img/bullet.png';
 	Img.map = new Image();
@@ -109,6 +122,7 @@
 		self.hpMax = initPack.hpMax;
 		self.score = initPack.score;
 		self.state = initPack.state;
+		self.frame = initPack.frame;
 		
 		self.draw = function(){	
 			var x = self.x - Player.list[selfId].x + WIDTH/2;
@@ -131,12 +145,21 @@
 			*/
 			
 			//drawPlayer(Img);
-			Img.player.src = '/client/img/guul/states/'+String(self.state)+'/'+String(currentFrame)+'.png';
+			//Img.player.src = '/client/img/guul/states/'+String(self.state)+'/'+String(currentFrame)+'.png';
+			//alert(Player.list[selfId].frame);
+			
+			Img.player.src = '/client/img/guul/states/'+String(self.state)+'/spritesheet.png';
+			
 			updateFrame();
+			ctx.drawImage(Img.player,
+				srcX,srcY,sheetFrameWidth,sheetFrameHeight,
+				x-width/2,y,width,height);
+			
+			/*
 			ctx.drawImage(Img.player,
 				0,0,Img.player.width,Img.player.height,
 				x-width/2,y,width,height);
-			
+			*/
 			
 			//ctx.fillText(self.score,self.x,self.y-60);
 		}
@@ -200,6 +223,10 @@
 					p.hp = pack.hp;
 				if(pack.score !== undefined)
 					p.score = pack.score;
+				if(pack.state !== undefined)
+					p.state = pack.state;
+				if(pack.frame !== undefined)
+					p.frame = pack.frame;
 			}
 		}
 		for(var i = 0 ; i < data.bullet.length; i++){
@@ -248,8 +275,10 @@
 	}
 	
 	document.onkeydown = function(event){
-		if(event.keyCode === 68)	//d
+		if(event.keyCode === 68){	//d
 			socket.emit('keyPress',{inputId:'right',state:true});
+			//Player.list[selfId].state='run';
+		}
 		else if(event.keyCode === 83)	//s
 			socket.emit('keyPress',{inputId:'down',state:true});
 		else if(event.keyCode === 65) //a

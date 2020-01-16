@@ -50,11 +50,13 @@ var Player = function(id){
 	self.hp = 10;
 	self.hpMax = 10;
 	self.score = 0;
-	self.state = 'run';
+	self.state = 'idle';
+	self.frame = 1;//may delete
 	
 	var super_update = self.update;
 	self.update = function(){
 		self.updateSpd();
+		self.frame++;
 		super_update();
 		
 		if(self.pressingAttack){
@@ -70,18 +72,29 @@ var Player = function(id){
 	self.updateSpd = function(){
 		if(self.pressingRight){
 			self.spdX = self.maxSpd;
+			self.state = 'run';
 		}
-		else if(self.pressingLeft)
+		else if(self.pressingLeft){
 			self.spdX = -self.maxSpd;
-		else
+			self.state = 'run';	
+		}
+		else{
 			self.spdX = 0;
-		
-		if(self.pressingUp)
+			self.state = 'idle';
+		}
+		if(self.pressingUp){
 			self.spdY = -self.maxSpd;
-		else if(self.pressingDown)
+			self.state = 'run';	
+		}
+		else if(self.pressingDown){
 			self.spdY = self.maxSpd;
-		else
-			self.spdY = 0;		
+			self.state = 'run';	
+		}
+		else{
+			self.spdY = 0;
+			if(self.state !== 'run')
+				self.state = 'idle';	
+		}
 	}
 	
 	self.getInitPack = function(){
@@ -94,6 +107,7 @@ var Player = function(id){
 			hpMax:self.hpMax,
 			score:self.score,
 			state:self.state,
+			frame:self.frame,
 		};		
 	}
 	self.getUpdatePack = function(){
@@ -104,8 +118,14 @@ var Player = function(id){
 			hp:self.hp,
 			score:self.score,
 			state:self.state,
+			frame:self.frame,
 		}	
 	}
+	/*
+	self.setState = function(state){
+		self.state = state;
+	}
+	*/
 	
 	Player.list[id] = self;
 	
