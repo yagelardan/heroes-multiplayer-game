@@ -17,15 +17,17 @@ var SOCKET_LIST = {};
 
 var mapMaxHeight = 480;
 var mapMaxWidth = 1920;
-var playerHeight = 200;
-var playerWidth = 200;
+//var playerHeight = 200;
+//var playerWidth = 200;
 
-var Entity = function(){
+var Entity = function(height, width){
 	var self = {
 		x:250,
 		y:250,
 		spdX:0,
 		spdY:0,
+		height:height,
+		width:width,
 		//float:0,
 		//jumpSpeed:0,
 		id:"",
@@ -40,11 +42,21 @@ var Entity = function(){
 	self.getDistance = function(pt){
 		return Math.sqrt(Math.pow(self.x-pt.x,2) + Math.pow(self.y-pt.y,2));
 	}
+	self.isHit = function(pt){
+		// If one rectangle is on left side of other 
+		if (self.x > (pt.x + pt.width/2) || pt.x > (self.x + self.width/2)) 
+			return false; 
+		// If one rectangle is above other 
+		if (self.y > (pt.y + pt.height/2) || pt.y > (self.y + self.height/2)) 
+			return false;   
+    	return true; 
+	}
+	
 	return self;
 }
 
 var Player = function(id){
-	var self = Entity();
+	var self = Entity(200,200);
 	self.id = id;
 	self.number = "" + Math.floor(10 * Math.random());
 	self.pressingRight = false;
@@ -84,13 +96,13 @@ var Player = function(id){
 	
 	self.updateSpd = function(){
 		if(self.pressingRight){
-			if(self.x + playerWidth/2 < mapMaxWidth)
+			if(self.x + self.width/2 < mapMaxWidth)
 				self.spdX = self.maxSpd;
 			else
 				self.spdX = 0;
 		}
 		else if(self.pressingLeft){
-			if(self.x - playerWidth/2 > 0)
+			if(self.x - self.width/2 > 0)
 				self.spdX = -self.maxSpd;
 			else
 				self.spdX = 0;
@@ -105,7 +117,7 @@ var Player = function(id){
 				self.spdY = 0;
 		}
 		else if(self.pressingDown){
-			if(self.y + playerHeight < mapMaxHeight)
+			if(self.y + self.height < mapMaxHeight)
 				self.spdY = self.maxSpd;
 			else
 				self.spdY = 0;
@@ -214,10 +226,13 @@ Player.update = function(){
 	}
 	return pack;
 }
-
-
+/*
+var isHit = function(p1_x, p1_y, p1_width, p1_height, p2_x, p2_y, p2_width, p2_height){
+	
+}
+*/
 var Bullet = function(parent,angle){
-	var self = Entity();
+	var self = Entity(5,5);
 	self.id = Math.random();
 	self.spdX = Math.cos(angle/180*Math.PI) * 10;
 	self.spdY = Math.sin(angle/180*Math.PI) * 10;
@@ -226,24 +241,27 @@ var Bullet = function(parent,angle){
 	self.toRemove = false;
 	var super_update = self.update;
 	self.update = function(){
-		if(self.timer++ > 100)
+		if(self.timer++ > 50 || self.x < 0 || self.x > mapMaxWidth)
 			self.toRemove = true;
 		super_update();
 		
 		for(var i in Player.list){
 			var p = Player.list[i];
-			if(self.getDistance(p) < 32 && self.parent !== p.id){
-				p.hp -= 1;
-								
-				if(p.hp <= 0){
-					var shooter = Player.list[self.parent];
-					if(shooter)
-						shooter.score += 1;
-					p.hp = p.hpMax;
-					p.x = Math.random() * 1300 + 100;
-					p.y = Math.random() * 150 + 100;
+			//if(self.getDistance(p) < 32 && self.parent !== p.id){
+			if(self.parent !== p.id){
+				if(self.isHit(p)){
+					p.hp -= 1; //bullet hit
+
+					if(p.hp <= 0){ //player dead
+						var shooter = Player.list[self.parent];
+						if(shooter)
+							shooter.score += 1;
+						p.hp = p.hpMax;
+						p.x = Math.random() * 1300 + 100;//start user at random position
+						p.y = Math.random() * 150 + 100;
+					}
+					self.toRemove = true; //remove bullet on hit
 				}
-				self.toRemove = true;
 			}
 		}
 	}
