@@ -15,12 +15,19 @@ console.log("Server started.");
 
 var SOCKET_LIST = {};
 
+var mapMaxHeight = 480;
+var mapMaxWidth = 1920;
+var playerHeight = 200;
+var playerWidth = 200;
+
 var Entity = function(){
 	var self = {
 		x:250,
 		y:250,
 		spdX:0,
 		spdY:0,
+		//float:0,
+		//jumpSpeed:0,
 		id:"",
 	}
 	self.update = function(){
@@ -51,50 +58,75 @@ var Player = function(id){
 	self.hpMax = 10;
 	self.score = 0;
 	self.state = 'idle';
+	self.direction = 'right';
 	self.frame = 1;//may delete
 	
 	var super_update = self.update;
+	var shootAngle=0;
 	self.update = function(){
 		self.updateSpd();
 		self.frame++;
 		super_update();
 		
 		if(self.pressingAttack){
-			self.shootBullet(self.mouseAngle);
+			if(self.direction === 'right')
+				shootAngle = 0;
+			else
+				shootAngle = 180;
+			self.shootBullet(shootAngle);
 		}
 	}
-	self.shootBullet = function(angle){
-		var b = Bullet(self.id,angle);
+	self.shootBullet = function(shootAngle=0){
+		var b = Bullet(self.id,shootAngle);
 		b.x = self.x;
 		b.y = self.y;
 	}
 	
 	self.updateSpd = function(){
 		if(self.pressingRight){
-			self.spdX = self.maxSpd;
-			self.state = 'run';
+			if(self.x + playerWidth/2 < mapMaxWidth)
+				self.spdX = self.maxSpd;
+			else
+				self.spdX = 0;
 		}
 		else if(self.pressingLeft){
-			self.spdX = -self.maxSpd;
-			self.state = 'run';	
+			if(self.x - playerWidth/2 > 0)
+				self.spdX = -self.maxSpd;
+			else
+				self.spdX = 0;
 		}
 		else{
 			self.spdX = 0;
-			self.state = 'idle';
 		}
 		if(self.pressingUp){
-			self.spdY = -self.maxSpd;
-			self.state = 'run';	
+			if(self.y > 0)
+				self.spdY = -self.maxSpd;
+			else
+				self.spdY = 0;
 		}
 		else if(self.pressingDown){
-			self.spdY = self.maxSpd;
-			self.state = 'run';	
+			if(self.y + playerHeight < mapMaxHeight)
+				self.spdY = self.maxSpd;
+			else
+				self.spdY = 0;
 		}
 		else{
-			self.spdY = 0;
-			if(self.state !== 'run')
-				self.state = 'idle';	
+			self.spdY = 0;	
 		}
+		if(self.pressingJump)
+			self.state = 'jump';	
+		
+		if(self.spdX > 0)
+			self.direction = 'right';
+		else if(self.spdX < 0)
+			self.direction = 'left';
+		if(self.spdY !== 0 || self.spdX !== 0)
+			self.state = 'run';	
+		else if(self.state === 'jump')//change
+			self.state = 'jump';	
+		else
+			self.state = 'idle';
+		
 	}
 	
 	self.getInitPack = function(){
@@ -107,6 +139,7 @@ var Player = function(id){
 			hpMax:self.hpMax,
 			score:self.score,
 			state:self.state,
+			direction:self.direction,
 			frame:self.frame,
 		};		
 	}
@@ -118,6 +151,7 @@ var Player = function(id){
 			hp:self.hp,
 			score:self.score,
 			state:self.state,
+			direction:self.direction,
 			frame:self.frame,
 		}	
 	}
@@ -146,6 +180,10 @@ Player.onConnect = function(socket){
 			player.pressingDown = data.state;
 		else if(data.inputId === 'attack')
 			player.pressingAttack = data.state;
+		else if(data.inputId === 'jump')
+			player.pressingJump = data.state;
+		else if(data.inputId === 'defence')
+			player.pressingDefence = data.state;
 		else if(data.inputId === 'mouseAngle')
 			player.mouseAngle = data.state;
 	});
@@ -202,8 +240,8 @@ var Bullet = function(parent,angle){
 					if(shooter)
 						shooter.score += 1;
 					p.hp = p.hpMax;
-					p.x = Math.random() * 500;
-					p.y = Math.random() * 500;					
+					p.x = Math.random() * 1300 + 100;
+					p.y = Math.random() * 150 + 100;
 				}
 				self.toRemove = true;
 			}

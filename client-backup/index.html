@@ -73,10 +73,10 @@
 	}
 	
 	//game
-	var sheetWidth = 1600;
-	var sheetHeight = 600;
-	var sheetFrameWidth = 200;
-	var sheetFrameHeight = 200;
+	var sheetWidth = 4536;
+	var sheetHeight = 556;
+	var sheetFrameWidth = 567;
+	var sheetFrameHeight = 556;
 	var sheetMaxFrames = sheetWidth/sheetFrameWidth;
 	
 	var srcX = 0;
@@ -103,8 +103,7 @@
 	
 	var Img = {};
 	Img.player = new Image();
-	/////////Img.player.src = '/client/img/guul/states/idle/spritesheet.png';
-	Img.player.src = '/client/img/guul/states/sprites.png';
+	Img.player.src = '/client/img/guul/states/idle/spritesheet.png';
 	Img.bullet = new Image();
 	Img.bullet.src = '/client/img/bullet.png';
 	Img.map = new Image();
@@ -154,20 +153,12 @@
 				spritesheetSrc = 'spritesheet';
 			else
 				spritesheetSrc = 'mirror_spritesheet';
-			/////Img.player.src = '/client/img/guul/states/'+String(self.state)+'/'+String(spritesheetSrc)+'.png';
-			
-				
-			if(self.state === 'jump')
-				srcY = 0;
-			else if(self.state === 'idle')
-				srcY = height; //*1
-			else if(self.state === 'run')
-				srcY = height*2;
+			Img.player.src = '/client/img/guul/states/'+String(self.state)+'/'+String(spritesheetSrc)+'.png';
 			
 			updateFrame();
 			ctx.drawImage(Img.player,
 				srcX,srcY,sheetFrameWidth,sheetFrameHeight,
-				x-width/2,y,sheetFrameWidth,sheetFrameHeight);
+				x-width/2,y,width,height);
 			
 			
 			//ctx.fillText(self.score,self.x,self.y-60);
