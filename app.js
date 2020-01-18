@@ -75,14 +75,16 @@ var Player = function(id){
 	self.jumping = false; //is player jumping
 	self.float = 0; //how much he is above ground
 	self.jumpSpeed = 0; //how strong the jump
+	self.pressedKeysOrdered = []; //for combos
 	
 	var super_update = self.update;
 	var shootAngle=0;
 	self.update = function(){
+		self.getDirection();
 		self.updateSpd();
 		self.frame++;
 		super_update();
-		
+		/*  normal shooting
 		if(self.pressingAttack){
 			if(self.direction === 'right')
 				shootAngle = 0;
@@ -90,14 +92,33 @@ var Player = function(id){
 				shootAngle = 180;
 			self.shootBullet(shootAngle);
 		}
+		*/
 	}
+	
+	self.doCombo = function(pressedKeysOrderedArr){
+		comboString = getComboString(pressedKeysOrderedArr);
+		if(comboString === "vdy")
+			self.shootBullet(180)//right
+		else if(comboString === "vay")
+			self.shootBullet(360);//left
+		else if(comboString === "vdwy" || comboString === "vdyw" || comboString === "vdyw")
+			self.shootBullet(225); //top-right
+		else if(comboString === "vdsy" || comboString === "vdys" || comboString === "vdys")
+			self.shootBullet(135); //bottom-right
+		else if(comboString === "vawy" || comboString === "vayw" || comboString === "vayw")
+			self.shootBullet(315); //top-left
+		else if(comboString === "vasy" || comboString === "vays" || comboString === "vays")
+			self.shootBullet(45); //bottom-left
+	}
+	
+	
 	self.shootBullet = function(shootAngle=0){
 		var b = Bullet(self.id,shootAngle);
 		b.x = self.x;
 		b.y = self.y;
 	}
 	
-	self.updateSpd = function(){
+	self.getDirection = function(){
 		if(self.pressingRight){
 			if(self.x + self.width/2 < mapMaxWidth)//right wall
 				if(self.jumping === false)
@@ -119,7 +140,11 @@ var Player = function(id){
 		else{
 			self.spdX = 0;
 		}
-		
+	}
+	
+	//self.getCo
+	
+	self.updateSpd = function(){	
 		if(!self.pressingJump && self.jumping === false){//dont allow movements in jump
 			if(self.pressingUp){
 				if(self.y > 0)
@@ -223,10 +248,35 @@ var Player = function(id){
 	initPack.player.push(self.getInitPack());
 	return self;
 }
+
+var getComboString = function(pressedKeysOrderedArr){
+	var comboKeysString = "";
+	
+	for(var i = 0; i<pressedKeysOrderedArr.length; i++){
+		comboKeysString += String(pressedKeysOrderedArr[i]);
+	}
+	return comboKeysString;
+}
+
+
+
 Player.list = {};
 Player.onConnect = function(socket){
 	var player = Player(socket.id);
 	socket.on('keyPress',function(data){
+		//for(var i = 0; i< data.pressedKeysOrderedArr.length; i++)
+			//console.log(data.pressedKeysOrderedArr[i]);
+		if(data.inputId === 'combo')
+			player.doCombo(data.pressedKeysOrderedArr);
+			/*
+			if(getCombo(data.pressedKeysOrderedArr) === "dra")
+				console.log("shooting right combo");
+			if(getCombo(data.pressedKeysOrderedArr) === "dla")
+					console.log("shooting left combo");
+			*/
+		
+			//console.log(data.pressedKeysOrderedArr);
+		
 		if(data.inputId === 'left')
 			player.pressingLeft = data.state;
 		else if(data.inputId === 'right')
@@ -279,11 +329,11 @@ var isHit = function(p1_x, p1_y, p1_width, p1_height, p2_x, p2_y, p2_width, p2_h
 var Bullet = function(parent,angle){
 	var self = Entity(5,5);
 	self.id = Math.random();
-	//self.spdX = Math.cos(angle/180*Math.PI) * 10;
-	self.spdX = 20;	
+	self.spdX = Math.cos(angle/180*Math.PI) * 20;
+	//self.spdX = 20;	
 	if(angle !== 0)
 		self.spdX *= -1;
-	self.spdY = Math.sin(angle/180*Math.PI) * 10;
+	self.spdY = Math.sin(angle/180*Math.PI) * 20;
 	self.parent = parent;
 	self.timer = 0;
 	self.toRemove = false;

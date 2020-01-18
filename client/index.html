@@ -30,6 +30,8 @@
 	var signDivSignUp = document.getElementById('signDiv-signUp');
 	var signDivPassword = document.getElementById('signDiv-password');
 	
+	var pressedKeysOrderedArr = [];
+	
 	signDivSignIn.onclick = function(){
 		socket.emit('signIn',{username:signDivUsername.value,password:signDivPassword.value});
 	}
@@ -198,7 +200,7 @@
 			var height = Img.bullet.height/2;
 			
 			var x = self.x - Player.list[selfId].x + WIDTH/2;
-			var y = self.y + 50;
+			var y = self.y;
 			
 			ctx.drawImage(Img.bullet,
 				0,0,Img.bullet.width,Img.bullet.height,
@@ -296,24 +298,48 @@
 		ctx.fillText(Player.list[selfId].score,0,30);
 	}
 	
+	var addToPressedKeysOrderedArr = function(NewKey){
+		isKeyAlreadyInArr = false;
+		for(var i=0; i<pressedKeysOrderedArr.length; i++)
+			if(pressedKeysOrderedArr[i] === NewKey)
+				isKeyAlreadyInArr = true;
+		if(isKeyAlreadyInArr === false)
+			pressedKeysOrderedArr.push(NewKey);
+	}
+	
 	document.onkeydown = function(event){
-		if(event.keyCode === 68)	//d
+		if(event.keyCode === 68){	//d
 			socket.emit('keyPress',{inputId:'right',state:true});
-		else if(event.keyCode === 83)	//s
+			addToPressedKeysOrderedArr("d");
+		}
+		else if(event.keyCode === 83){	//s
 			socket.emit('keyPress',{inputId:'down',state:true});
-		else if(event.keyCode === 65) //a
+			addToPressedKeysOrderedArr("s");	
+		}
+		else if(event.keyCode === 65){ //a
 			socket.emit('keyPress',{inputId:'left',state:true});
-		else if(event.keyCode === 87) // w
+			addToPressedKeysOrderedArr("a");	
+		}
+		else if(event.keyCode === 87){ // w
 			socket.emit('keyPress',{inputId:'up',state:true});
-		else if(event.keyCode === 89) // y
+			addToPressedKeysOrderedArr("w");
+		}
+		else if(event.keyCode === 89){ // y
 			socket.emit('keyPress',{inputId:'attack',state:true});
-		else if(event.keyCode === 71) // g
+			addToPressedKeysOrderedArr("y");
+		}
+		else if(event.keyCode === 71){ // g
 			socket.emit('keyPress',{inputId:'jump',state:true});
-		else if(event.keyCode === 86) // v
+			addToPressedKeysOrderedArr("g");
+		}
+		else if(event.keyCode === 86){ // v
 			socket.emit('keyPress',{inputId:'defence',state:true});
-			
+			addToPressedKeysOrderedArr("v");	
+		}
+		//alert(addToPressedKeysOrderedArr);
 	}
 	document.onkeyup = function(event){
+		var keyUnPressed = true;
 		if(event.keyCode === 68)	//d
 			socket.emit('keyPress',{inputId:'right',state:false});
 		else if(event.keyCode === 83)	//s
@@ -328,6 +354,12 @@
 		//	socket.emit('keyPress',{inputId:'jump',state:false});
 		else if(event.keyCode === 86) // v
 			socket.emit('keyPress',{inputId:'defence',state:false});
+		else
+			keyUnPressed = false;
+		if(keyUnPressed === true){
+			socket.emit('keyPress',{inputId:'combo',pressedKeysOrderedArr:pressedKeysOrderedArr});
+			pressedKeysOrderedArr = [];
+		}	
 	}
 	
 	document.onmousedown = function(event){
