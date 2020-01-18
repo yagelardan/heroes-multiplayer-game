@@ -72,6 +72,9 @@ var Player = function(id){
 	self.state = 'idle';
 	self.direction = 'right';
 	self.frame = 1;//may delete
+	self.jumping = false; //is player jumping
+	self.float = 0; //how much he is above ground
+	self.jumpSpeed = 0; //how strong the jump
 	
 	var super_update = self.update;
 	var shootAngle=0;
@@ -96,49 +99,89 @@ var Player = function(id){
 	
 	self.updateSpd = function(){
 		if(self.pressingRight){
-			if(self.x + self.width/2 < mapMaxWidth)
-				self.spdX = self.maxSpd;
+			if(self.x + self.width/2 < mapMaxWidth)//right wall
+				if(self.jumping === false)
+					self.spdX = self.maxSpd;
+				else//if player jump, change directions, dont add speed 
+					self.direction = 'right';
 			else
 				self.spdX = 0;
 		}
 		else if(self.pressingLeft){
 			if(self.x - self.width/2 > 0)
-				self.spdX = -self.maxSpd;
+				if(self.jumping === false)
+					self.spdX = -self.maxSpd;
+				else
+					self.direction = 'left';
 			else
 				self.spdX = 0;
 		}
 		else{
 			self.spdX = 0;
 		}
-		if(self.pressingUp){
-			if(self.y > 0)
-				self.spdY = -self.maxSpd;
-			else
-				self.spdY = 0;
-		}
-		else if(self.pressingDown){
-			if(self.y + self.height < mapMaxHeight)
-				self.spdY = self.maxSpd;
-			else
-				self.spdY = 0;
-		}
-		else{
-			self.spdY = 0;	
-		}
-		if(self.pressingJump)
-			self.state = 'jump';	
 		
+		if(!self.pressingJump && self.jumping === false){//dont allow movements in jump
+			if(self.pressingUp){
+				if(self.y > 0)
+					self.spdY = -self.maxSpd;
+				else
+					self.spdY = 0;
+			}
+			else if(self.pressingDown){
+				if(self.y + self.height < mapMaxHeight)
+					self.spdY = self.maxSpd;
+				else
+					self.spdY = 0;
+			}
+			else{
+				self.spdY = 0;	
+			}
+		}else{//jumping
+			if(self.y < 0 || self.y + self.height > mapMaxHeight)//dont allow to go over wall in jumping
+				self.spdY = 0;
+		}
+		
+		if(self.pressingJump || self.jumping === true){
+			self.pressingJump = false;
+			if(self.float == 0 && self.jumpSpeed == 0){//start jump
+				self.jumping = true;
+				self.jumpSpeed = 15;
+			}else if(self.float <= 0 && self.jumpSpeed < 0){//landed
+				self.jumping = false;
+				self.float = 0;//may prevent going underground
+				self.jumpSpeed = 0;
+			}else{//mid jump, float>0
+				self.float += self.jumpSpeed;
+				self.jumpSpeed -= 2;
+			}
+		}else{//may prevent bugs
+				self.float = 0;
+				self.jumpSpeed = 0;
+		}
+		
+
 		if(self.spdX > 0)
 			self.direction = 'right';
 		else if(self.spdX < 0)
 			self.direction = 'left';
-		if(self.spdY !== 0 || self.spdX !== 0)
+		
+		if(self.jumping){//change
+			if(self.pressingAttack || self.state === 'jump_attack')
+				self.state = 'jump_attack';
+			else
+				self.state = 'jump';	
+		}
+		else if(self.spdX !== 0 || self.spdY !== 0)
 			self.state = 'run';	
-		else if(self.state === 'jump')//change
-			self.state = 'jump';	
 		else
 			self.state = 'idle';
-		
+		/*
+		if(self.pressingAttack){
+			if(self.jumping === true){ //attack in air
+				self.state = 'jump_attack';
+			}
+		}
+		*/
 	}
 	
 	self.getInitPack = function(){
@@ -146,6 +189,7 @@ var Player = function(id){
 			id:self.id,
 			x:self.x,
 			y:self.y,	
+			float:self.float,
 			number:self.number,	
 			hp:self.hp,
 			hpMax:self.hpMax,
@@ -160,6 +204,7 @@ var Player = function(id){
 			id:self.id,
 			x:self.x,
 			y:self.y,
+			float:self.float,
 			hp:self.hp,
 			score:self.score,
 			state:self.state,
