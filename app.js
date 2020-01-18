@@ -279,7 +279,10 @@ var isHit = function(p1_x, p1_y, p1_width, p1_height, p2_x, p2_y, p2_width, p2_h
 var Bullet = function(parent,angle){
 	var self = Entity(5,5);
 	self.id = Math.random();
-	self.spdX = Math.cos(angle/180*Math.PI) * 10;
+	//self.spdX = Math.cos(angle/180*Math.PI) * 10;
+	self.spdX = 20;	
+	if(angle !== 0)
+		self.spdX *= -1;
 	self.spdY = Math.sin(angle/180*Math.PI) * 10;
 	self.parent = parent;
 	self.timer = 0;
