@@ -1,0 +1,13 @@
+use myGame
+db.createCollection("account");
+	db.createCollection("progress");
+
+db.account.insert({username:"bob", password:"pass"});
+db.account.insert({username:"bob2", password:"pass2"});
+
+
+db.progress.insert({username:"bob",level:123, questComplete:['myQuest', 'myQuest2']});
+
+db.<COLLECTION>.find(<MUST MATCH>);
+db.progress.find({username:"bob"});
+db.progress.find({username:"bob"}, {level:1});

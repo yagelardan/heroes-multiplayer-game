@@ -280,13 +280,33 @@
 		updateFrame();
 		drawMap();
 		drawScore();
+		drawObjects();
 		
-		for(var i in Player.list)
-			Player.list[i].draw();
-		for(var i in Bullet.list)
-			Bullet.list[i].draw();
+
+		//objectsOrderedByZindex = objectsOrderedByZindex.sort((a, b) => a - b);//sort array by y value
+		//for(var i in 
+		
 	},20);
 	
+	var drawObjects = function(){
+		var playersOrderedByZindex = [];
+		for(var i in Player.list)
+			playersOrderedByZindex.push(Player.list[i].y);
+		playersOrderedByZindex.sort((a, b) => a - b);//sort array by y value
+		
+		for(var p = 0; p < playersOrderedByZindex.length; p++)
+			for(var i in Player.list)
+				if(playersOrderedByZindex[p] === Player.list[i].y)
+					Player.list[i].draw();
+			
+		
+		
+		for(var i in Bullet.list)
+			Bullet.list[i].draw();
+		
+		
+	}
+		
 	var drawMap = function(){
 		var x = WIDTH/2 - Player.list[selfId].x;
 		//var y = HEIGHT/2 - Player.list[selfId].y;

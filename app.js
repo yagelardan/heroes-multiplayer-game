@@ -47,7 +47,7 @@ var Entity = function(height, width){
 		if (self.x > (pt.x + pt.width/2) || pt.x > (self.x + self.width/2)) 
 			return false; 
 		// If one rectangle is above other 
-		if (self.y > (pt.y + pt.height/2) || pt.y > (self.y + self.height/2)) 
+		if (self.y > (pt.y + pt.height - 20) || pt.y > (self.y + self.height - 20)) 
 			return false;   
     	return true; 
 	}
@@ -97,25 +97,25 @@ var Player = function(id){
 	
 	self.doCombo = function(pressedKeysOrderedArr){
 		comboString = getComboString(pressedKeysOrderedArr);
-		if(comboString === "vdy")
-			self.shootBullet(180)//right
-		else if(comboString === "vay")
-			self.shootBullet(360);//left
-		else if(comboString === "vdwy" || comboString === "vdyw" || comboString === "vdyw")
-			self.shootBullet(225); //top-right
-		else if(comboString === "vdsy" || comboString === "vdys" || comboString === "vdys")
-			self.shootBullet(135); //bottom-right
-		else if(comboString === "vawy" || comboString === "vayw" || comboString === "vayw")
-			self.shootBullet(315); //top-left
-		else if(comboString === "vasy" || comboString === "vays" || comboString === "vays")
-			self.shootBullet(45); //bottom-left
+		if(comboString === "vdy")//right
+			self.shootBullet(180)
+		else if(comboString === "vay")//left
+			self.shootBullet(360);
+		else if(comboString === "vdwy" || comboString === "vdyw" || comboString === "vwdy")//top-right 225
+			self.shootBullet(200); 
+		else if(comboString === "vdsy" || comboString === "vdys" || comboString === "vsyd")//bottom-right 135
+			self.shootBullet(160); 
+		else if(comboString === "vawy" || comboString === "vayw" || comboString === "vway")//top-left 315
+			self.shootBullet(340); 
+		else if(comboString === "vasy" || comboString === "vays" || comboString === "vsya")//bottom-left 45
+			self.shootBullet(20); 
 	}
 	
 	
 	self.shootBullet = function(shootAngle=0){
 		var b = Bullet(self.id,shootAngle);
 		b.x = self.x;
-		b.y = self.y;
+		b.y = self.y + self.height/2;
 	}
 	
 	self.getDirection = function(){
@@ -266,33 +266,30 @@ Player.onConnect = function(socket){
 	socket.on('keyPress',function(data){
 		//for(var i = 0; i< data.pressedKeysOrderedArr.length; i++)
 			//console.log(data.pressedKeysOrderedArr[i]);
+		if(data.inputId === 'defence')
+				player.pressingDefence = data.state;
+		if(data.inputId === 'left' || data.inputId === 'right')
+			player.direction = data.inputId;
 		if(data.inputId === 'combo')
 			player.doCombo(data.pressedKeysOrderedArr);
-			/*
-			if(getCombo(data.pressedKeysOrderedArr) === "dra")
-				console.log("shooting right combo");
-			if(getCombo(data.pressedKeysOrderedArr) === "dla")
-					console.log("shooting left combo");
-			*/
-		
-			//console.log(data.pressedKeysOrderedArr);
-		
-		if(data.inputId === 'left')
-			player.pressingLeft = data.state;
-		else if(data.inputId === 'right')
-			player.pressingRight = data.state;
-		else if(data.inputId === 'up')
-			player.pressingUp = data.state;
-		else if(data.inputId === 'down')
-			player.pressingDown = data.state;
-		else if(data.inputId === 'attack')
-			player.pressingAttack = data.state;
-		else if(data.inputId === 'jump')
-			player.pressingJump = data.state;
-		else if(data.inputId === 'defence')
-			player.pressingDefence = data.state;
-		else if(data.inputId === 'mouseAngle')
-			player.mouseAngle = data.state;
+		else if(player.pressingDefence !== true){
+			if(data.inputId === 'left')
+				player.pressingLeft = data.state;
+			else if(data.inputId === 'right')
+				player.pressingRight = data.state;
+			else if(data.inputId === 'up')
+				player.pressingUp = data.state;
+			else if(data.inputId === 'down')
+				player.pressingDown = data.state;
+			else if(data.inputId === 'attack')
+				player.pressingAttack = data.state;
+			else if(data.inputId === 'jump')
+				player.pressingJump = data.state;
+			//else if(data.inputId === 'defence')
+			//	player.pressingDefence = data.state;
+			else if(data.inputId === 'mouseAngle')
+				player.mouseAngle = data.state;
+		}
 	});
 	
 	socket.emit('init',{
